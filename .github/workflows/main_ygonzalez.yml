@@ -1,0 +1,66 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+name: Build and deploy ASP.NET Web Forms to Azure Web App - ygonzalez
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v1.0.5
+
+      - name: Restore NuGet packages
+        run: nuget restore WebSimpleASPNet48.csproj
+
+      - name: Build and publish to folder
+        run: msbuild WebSimpleASPNet48.csproj /p:Configuration=Release /p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:PublishUrl=published
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASP-app
+          path: published/
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'Production'
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact from build
+        uses: actions/download-artifact@v4
+        with:
+          name: ASP-app
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_B811EDB2ADD64FAABB7BAED196A4F915 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_887A43A3D6784B9196F29AD22670EAD5 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8686509335B34399ABC22A7330B8C6FC }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'ygonzalez'
+          slot-name: 'Production'
+          package: ./ASP-app
