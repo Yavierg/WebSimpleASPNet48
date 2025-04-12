@@ -3,3 +3,7 @@
     <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
 </Project>
+<ItemGroup>
+    <Reference Include="System.Web" />
+    <!-- Tus otras referencias aquí -->
+</ItemGroup>
